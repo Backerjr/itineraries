@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bespoke 8-Day UAE Itinerary for Mr. Poon & Group</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F9FA;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .gemini-response {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #118AB2;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+    </style>
+</head>
+<body class="text-[#073B4C]">
+
+    <div class="container mx-auto p-4 md:p-8">
+
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-[#073B4C]">An 8-Day Premium UAE Journey</h1>
+            <p class="text-lg text-[#118AB2] mt-2">Visual Itinerary & Cost Analysis for Mr. Poon & Group</p>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 text-center">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <p class="text-5xl font-bold text-[#FF6B6B]">13</p>
+                <p class="text-lg mt-2">Guests</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <p class="text-5xl font-bold text-[#FFD166]">8</p>
+                <p class="text-lg mt-2">Days of Discovery</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <p class="text-5xl font-bold text-[#06D6A0]">2</p>
+                <p class="text-lg mt-2">Safari Options</p>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-lg shadow-md p-6 mb-12">
+            <h2 class="text-2xl font-bold text-center mb-2">Daily Cost Distribution</h2>
+            <p class="text-center text-gray-600 mb-6">This chart illustrates the cost breakdown per day, highlighting Day 4 (Sharjah & Desert Safari) as the most significant expenditure. The total cost varies based on the chosen safari experience.</p>
+            <div class="chart-container h-96 md:h-[500px] max-h-[500px]">
+                <canvas id="dailyCostChart"></canvas>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-lg shadow-md p-6 mb-12">
+            <h2 class="text-2xl font-bold text-center mb-2">The Key Choice: Your Desert Adventure</h2>
+            <p class="text-center text-gray-600 mb-6">Day 4 presents a choice that shapes your desert experience and final cost. The premium option offers more personal space with an additional vehicle. Below is a breakdown of how this choice impacts the total package price.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="flex flex-col space-y-4">
+                    <div class="border-4 border-[#FFD166] p-6 rounded-lg text-center">
+                        <h3 class="text-xl font-bold">Option A: Premium Safari</h3>
+                        <p class="text-gray-700 mt-2">Maximum comfort with three private 4x4 Land Cruisers, ensuring a window seat and ample space for every guest.</p>
+                        <p class="text-3xl font-bold text-[#073B4C] mt-4">Total: AED 14,915</p>
+                    </div>
+                    <div class="border-2 border-gray-300 p-6 rounded-lg text-center">
+                        <h3 class="text-xl font-bold">Option B: Standard Safari</h3>
+                        <p class="text-gray-700 mt-2">A fantastic value-focused experience with two private 4x4 Land Cruisers for your group's adventure.</p>
+                        <p class="text-3xl font-bold text-[#073B4C] mt-4">Total: AED 13,915</p>
+                    </div>
+                </div>
+                <div class="chart-container h-72 md:h-96">
+                    <canvas id="safariImpactChart"></canvas>
+                </div>
+            </div>
+        </section>
+        
+        <section class="bg-white rounded-lg shadow-md p-6 mb-12">
+            <h2 class="text-2xl font-bold text-center mb-2">✨ AI Itinerary Assistant for Your Leisure Day</h2>
+            <p class="text-center text-gray-600 mb-6">Day 3 is yours to explore! What are you in the mood for? Get personalized suggestions for dining, shopping, or attractions for your group of 13.</p>
+            <div class="max-w-2xl mx-auto">
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="leisure-input" placeholder="e.g., 'family-friendly lunch spots' or 'luxury shopping'" class="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#118AB2] focus:outline-none">
+                    <button id="get-suggestions-btn" class="bg-[#118AB2] text-white font-bold py-3 px-6 rounded-lg hover:bg-[#073B4C] transition-colors flex items-center justify-center gap-2">
+                        <span>Get Suggestions</span>
+                    </button>
+                </div>
+                <div id="gemini-loader-leisure" class="hidden justify-center mt-6">
+                    <div class="loader"></div>
+                </div>
+                <div id="gemini-response-leisure" class="mt-6 p-4 border rounded-lg bg-gray-50 text-gray-700 gemini-response hidden"></div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-lg shadow-md p-6 mb-12">
+            <h2 class="text-2xl font-bold text-center mb-2">✨ AI-Powered Trip Planner</h2>
+            <p class="text-center text-gray-600 mb-8">Get expert advice on what to wear and how to capture the best photos with our AI-powered travel assistants.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-center mb-4">AI Wardrobe Planner</h3>
+                    <div class="flex flex-col gap-2">
+                        <select id="wardrobe-day-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#118AB2] focus:outline-none">
+                            <option value="1">Day 1: Arrival in Dubai</option>
+                            <option value="2">Day 2: Abu Dhabi's Grandeur</option>
+                            <option value="4">Day 4: Culture & Desert Adventure</option>
+                            <option value="5">Day 5: The Heart of Old Dubai</option>
+                            <option value="6">Day 6: Modern Marvels</option>
+                            <option value="7">Day 7: Nature & Heritage</option>
+                            <option value="8">Day 8: Iconic Farewell</option>
+                        </select>
+                        <button id="get-wardrobe-btn" class="bg-[#118AB2] text-white font-bold py-3 px-6 rounded-lg hover:bg-[#073B4C] transition-colors">Get Wardrobe Advice</button>
+                    </div>
+                     <div id="gemini-loader-wardrobe" class="hidden justify-center mt-6"><div class="loader"></div></div>
+                    <div id="gemini-response-wardrobe" class="mt-6 p-4 border rounded-lg bg-gray-50 text-gray-700 gemini-response hidden"></div>
+                </div>
+                 <div>
+                    <h3 class="text-xl font-bold text-center mb-4">AI Photography Guide</h3>
+                    <div class="flex flex-col gap-2">
+                        <select id="photo-location-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#118AB2] focus:outline-none">
+                            <option value="Sheikh Zayed Grand Mosque">Sheikh Zayed Grand Mosque</option>
+                            <option value="Sharjah's Cultural Capital">Sharjah's Cultural Capital</option>
+                            <option value="Arabian Desert Safari">Arabian Desert Safari</option>
+                            <option value="Old Dubai Souks">Old Dubai Souks</option>
+                            <option value="Museum of the Future">Museum of the Future</option>
+                            <option value="Al Qudra Lakes">Al Qudra Lakes</option>
+                        </select>
+                        <button id="get-photo-btn" class="bg-[#118AB2] text-white font-bold py-3 px-6 rounded-lg hover:bg-[#073B4C] transition-colors">Get Photo Tips</button>
+                    </div>
+                    <div id="gemini-loader-photo" class="hidden justify-center mt-6"><div class="loader"></div></div>
+                    <div id="gemini-response-photo" class="mt-6 p-4 border rounded-lg bg-gray-50 text-gray-700 gemini-response hidden"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-lg shadow-md p-6 mb-12">
+            <h2 class="text-2xl font-bold text-center mb-6">The Guest Journey & Departure Timeline</h2>
+            <p class="text-center text-gray-600 mb-8">The group size evolves throughout the journey, with planned departures on Day 5 and Day 6. This timeline visualizes the flow of guests and key activities day by day.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <div class="relative pl-8">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#118AB2] rounded"></div>
+                        <div class="mb-8 relative">
+                            <div class="absolute -left-11 top-1 w-6 h-6 bg-[#FF6B6B] rounded-full border-4 border-white"></div>
+                            <h3 class="font-bold text-lg">Day 1-4: Full Group (13 Guests)</h3>
+                            <p class="text-gray-600">Arrival, Abu Dhabi Tour, Leisure Day, and Sharjah & Desert Safari.</p>
+                            <button class="insight-btn text-sm text-[#118AB2] font-semibold mt-1" data-topic="Abu Dhabi's Grandeur (Day 2)">✨ Get Cultural Insights</button>
+                        </div>
+                        <div class="mb-8 relative">
+                            <div class="absolute -left-11 top-1 w-6 h-6 bg-[#FFD166] rounded-full border-4 border-white"></div>
+                            <h3 class="font-bold text-lg">Day 5: 12 Guests Remain</h3>
+                            <p class="text-gray-600">Old Dubai Tour. One guest departs in the evening.</p>
+                            <button class="insight-btn text-sm text-[#118AB2] font-semibold mt-1" data-topic="the Heart of Old Dubai (Day 5)">✨ Get Cultural Insights</button>
+                        </div>
+                        <div class="mb-8 relative">
+                            <div class="absolute -left-11 top-1 w-6 h-6 bg-[#06D6A0] rounded-full border-4 border-white"></div>
+                            <h3 class="font-bold text-lg">Day 6: 7 Guests Remain</h3>
+                            <p class="text-gray-600">Modern Dubai Tour. Six guests depart in the evening.</p>
+                             <button class="insight-btn text-sm text-[#118AB2] font-semibold mt-1" data-topic="Modern Dubai's Marvels (Day 6)">✨ Get Cultural Insights</button>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute -left-11 top-1 w-6 h-6 bg-[#118AB2] rounded-full border-4 border-white"></div>
+                            <h3 class="font-bold text-lg">Day 7-8: Final Group (7 Guests)</h3>
+                            <p class="text-gray-600">Al Qudra Lakes, Hidden Dubai Tour, and final departure.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container h-80">
+                    <canvas id="guestCountChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <footer class="text-center mt-12 py-6 border-t">
+            <p class="text-gray-600">This infographic was generated based on the "Bespoke 8-Day Premium Itinerary for Mr. Poon & Group."</p>
+            <p class="text-gray-500 text-sm mt-1">Confirm your safari choice to finalize your unforgettable journey.</p>
+        </footer>
+    </div>
+    
+    <div id="insight-modal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="modal-title" class="text-xl font-bold">Cultural Insights</h3>
+                <button id="modal-close" class="text-2xl font-bold">&times;</button>
+            </div>
+            <div id="modal-content" class="p-6 overflow-y-auto">
+                 <div id="modal-loader" class="hidden justify-center my-6">
+                    <div class="loader"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<script>
+    const wrapLabel = (label, maxWidth = 16) => {
+        if (label.length <= maxWidth) return label;
+        const words = label.split(' ');
+        const lines = [];
+        let currentLine = '';
+        words.forEach(word => {
+            if ((currentLine + ' ' + word).trim().length > maxWidth) {
+                lines.push(currentLine.trim());
+                currentLine = word;
+            } else {
+                currentLine = (currentLine + ' ' + word).trim();
+            }
+        });
+        if (currentLine) lines.push(currentLine.trim());
+        return lines;
+    };
+
+    const tooltipTitleCallback = (tooltipItems) => {
+        const item = tooltipItems[0];
+        let label = item.chart.data.labels[item.dataIndex];
+        return Array.isArray(label) ? label.join(' ') : label;
+    };
+
+    const commonChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            tooltip: {
+                callbacks: {
+                    title: tooltipTitleCallback
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    color: '#073B4C',
+                },
+                grid: {
+                    display: false
+                }
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: '#073B4C',
+                    callback: function(value) {
+                        return 'AED ' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    };
+
+    const dailyCostCtx = document.getElementById('dailyCostChart').getContext('2d');
+    new Chart(dailyCostCtx, {
+        type: 'bar',
+        data: {
+            labels: [
+                wrapLabel('Day 1: Arrival Transfer'),
+                wrapLabel("Day 2: Abu Dhabi Tour"),
+                wrapLabel('Day 4: Sharjah & Safari'),
+                wrapLabel('Day 5: Old Dubai & Transfer'),
+                wrapLabel('Day 6: Modern Dubai & Transfers'),
+                wrapLabel('Day 7: Al Qudra Lakes'),
+                wrapLabel('Day 8: Hidden Dubai & Departure')
+            ],
+            datasets: [{
+                label: 'Cost with Premium Safari (Option A)',
+                data: [720, 2150, 5170, 1750, 2660, 875, 1680],
+                backgroundColor: '#118AB2',
+                borderColor: '#073B4C',
+                borderWidth: 1
+            }, {
+                label: 'Cost with Standard Safari (Option B)',
+                data: [720, 2150, 3980, 1750, 2660, 875, 1680],
+                backgroundColor: '#FFD166',
+                borderColor: '#E5A000',
+                borderWidth: 1
+            }]
+        },
+        options: commonChartOptions
+    });
+
+    const safariImpactCtx = document.getElementById('safariImpactChart').getContext('2d');
+    new Chart(safariImpactCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Base Itinerary Cost (ex. Day 4)', 'Standard Safari (Day 4)', 'Premium Safari (Day 4)'],
+            datasets: [{
+                label: 'Cost Breakdown (AED)',
+                data: [9935, 3980, 5170],
+                backgroundColor: ['#073B4C', '#FFD166', '#FF6B6B'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                title: {
+                    display: true,
+                    text: 'Impact of Safari Choice on Total Cost'
+                },
+                tooltip: {
+                    callbacks: {
+                        title: tooltipTitleCallback,
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed !== null) {
+                                label += 'AED ' + context.parsed.toLocaleString();
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    const guestCountCtx = document.getElementById('guestCountChart').getContext('2d');
+    new Chart(guestCountCtx, {
+        type: 'line',
+        data: {
+            labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Day 8'],
+            datasets: [{
+                label: 'Number of Guests Present',
+                data: [13, 13, 13, 13, 13, 7, 7, 7],
+                fill: true,
+                backgroundColor: 'rgba(6, 214, 160, 0.2)',
+                borderColor: '#06D6A0',
+                tension: 0.1,
+                pointBackgroundColor: '#06D6A0',
+                pointRadius: 5
+            }]
+        },
+        options: {
+             responsive: true,
+             maintainAspectRatio: false,
+             plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { title: tooltipTitleCallback } }
+             },
+             scales: {
+                x: { grid: { display: false } },
+                y: {
+                    beginAtZero: false,
+                    max: 14,
+                    min: 6,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+             }
+        }
+    });
+
+    const apiKey = "";
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+    const itineraryData = {
+        '1': 'Arrival in Dubai. Transfer to hotel.',
+        '2': 'Full-Day Abu Dhabi City Tour including Sheikh Zayed Grand Mosque, scenic Corniche drive, Saadiyat Island, and House of the Artisans.',
+        '4': 'Morning guided tour of Sharjah, the UAE\'s cultural capital, followed by an afternoon and evening Desert Safari experience with dune bashing.',
+        '5': 'Old Dubai City Tour including Al Fahidi Historical District, vibrant souks, and the Dubai Museum.',
+        '6': 'Modern Dubai Tour visiting the Museum of the Future, Palm Jumeirah, and Dubai Marina.',
+        '7': 'An excursion to Al Qudra Lakes & Heritage Village for independent exploration.',
+        '8': 'A unique "Hidden Dubai" tour including monorail tickets before a direct airport transfer.'
+    };
+
+    async function callGemini(prompt, retries = 3, delay = 1000) {
+        try {
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+            };
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                 if (response.status === 429 && retries > 0) {
+                    await new Promise(res => setTimeout(res, delay));
+                    return callGemini(prompt, retries - 1, delay * 2);
+                }
+                throw new Error(`API call failed with status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            const candidate = result.candidates?.[0];
+            if (candidate && candidate.content?.parts?.[0]?.text) {
+                return candidate.content.parts[0].text;
+            } else {
+                return "Sorry, I couldn't generate a response. The model's reply was empty.";
+            }
+        } catch (error) {
+            console.error(error);
+            return `An error occurred while fetching suggestions: ${error.message}. Please try again later.`;
+        }
+    }
+
+    const leisureInput = document.getElementById('leisure-input');
+    const getSuggestionsBtn = document.getElementById('get-suggestions-btn');
+    const geminiLoaderLeisure = document.getElementById('gemini-loader-leisure');
+    const geminiResponseLeisure = document.getElementById('gemini-response-leisure');
+    
+    getSuggestionsBtn.addEventListener('click', async () => {
+        const query = leisureInput.value.trim();
+        if (!query) {
+            geminiResponseLeisure.innerHTML = "Please enter what you're looking for.";
+            geminiResponseLeisure.classList.remove('hidden');
+            return;
+        }
+
+        geminiLoaderLeisure.style.display = 'flex';
+        geminiResponseLeisure.classList.add('hidden');
+        getSuggestionsBtn.disabled = true;
+
+        const prompt = `You are a luxury travel concierge in Dubai. A group of 13 guests is looking for suggestions for their free day. They are interested in "${query}". Provide 3-4 detailed and high-end suggestions suitable for a large group. Include brief descriptions, why it's a good fit, and perhaps a price indication (e.g., $, $$, $$$). Format the response using markdown.`;
+        
+        const responseText = await callGemini(prompt);
+        geminiResponseLeisure.innerHTML = marked.parse(responseText);
+
+        geminiLoaderLeisure.style.display = 'none';
+        geminiResponseLeisure.classList.remove('hidden');
+        getSuggestionsBtn.disabled = false;
+    });
+
+    const getWardrobeBtn = document.getElementById('get-wardrobe-btn');
+    const wardrobeDaySelect = document.getElementById('wardrobe-day-select');
+    const geminiLoaderWardrobe = document.getElementById('gemini-loader-wardrobe');
+    const geminiResponseWardrobe = document.getElementById('gemini-response-wardrobe');
+
+    getWardrobeBtn.addEventListener('click', async () => {
+        const day = wardrobeDaySelect.value;
+        const activities = itineraryData[day];
+
+        geminiLoaderWardrobe.style.display = 'flex';
+        geminiResponseWardrobe.classList.add('hidden');
+        getWardrobeBtn.disabled = true;
+
+        const prompt = `You are a Dubai travel and style expert. For Day ${day} of a trip in mid-November, suggest an appropriate and stylish outfit for a group of tourists. The day's activities are: "${activities}". Provide suggestions for both men and women, considering the weather (warm days, cooler evenings) and any cultural dress codes (especially for religious sites). Format the response using markdown with clear headings.`;
+        
+        const responseText = await callGemini(prompt);
+        geminiResponseWardrobe.innerHTML = marked.parse(responseText);
+
+        geminiLoaderWardrobe.style.display = 'none';
+        geminiResponseWardrobe.classList.remove('hidden');
+        getWardrobeBtn.disabled = false;
+    });
+
+    const getPhotoBtn = document.getElementById('get-photo-btn');
+    const photoLocationSelect = document.getElementById('photo-location-select');
+    const geminiLoaderPhoto = document.getElementById('gemini-loader-photo');
+    const geminiResponsePhoto = document.getElementById('gemini-response-photo');
+
+    getPhotoBtn.addEventListener('click', async () => {
+        const location = photoLocationSelect.value;
+        
+        geminiLoaderPhoto.style.display = 'flex';
+        geminiResponsePhoto.classList.add('hidden');
+        getPhotoBtn.disabled = true;
+
+        const prompt = `You are a professional travel photographer. Provide 3-4 creative and practical photography tips for capturing stunning photos at "${location}" in the UAE. Include tips on composition, lighting (best time of day), and unique angles or subjects to focus on. Keep the advice concise and easy for amateur photographers to follow. Format the response using markdown.`;
+        
+        const responseText = await callGemini(prompt);
+        geminiResponsePhoto.innerHTML = marked.parse(responseText);
+
+        geminiLoaderPhoto.style.display = 'none';
+        geminiResponsePhoto.classList.remove('hidden');
+        getPhotoBtn.disabled = false;
+    });
+
+    const insightModal = document.getElementById('insight-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalContent = document.getElementById('modal-content');
+    const modalClose = document.getElementById('modal-close');
+    const modalLoader = document.getElementById('modal-loader');
+    
+    document.querySelectorAll('.insight-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            const topic = button.dataset.topic;
+            modalTitle.innerText = `Cultural Insights: ${topic}`;
+            insightModal.style.display = 'flex';
+            modalContent.innerHTML = '';
+            modalLoader.style.display = 'flex';
+
+            const prompt = `You are a tour guide for a premium travel group in the UAE. Provide 3 fascinating and concise cultural or historical facts about "${topic}". The facts should be easy to understand for tourists. Format the response as a markdown bulleted list.`;
+            
+            const responseText = await callGemini(prompt);
+            modalContent.innerHTML = marked.parse(responseText);
+            modalLoader.style.display = 'none';
+        });
+    });
+
+    modalClose.addEventListener('click', () => {
+        insightModal.style.display = 'none';
+    });
+
+    insightModal.addEventListener('click', (e) => {
+        if (e.target === insightModal) {
+            insightModal.style.display = 'none';
+        }
+    });
+
+</script>
+</body>
+</html>
+
