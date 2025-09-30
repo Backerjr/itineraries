@@ -1,3 +1,4 @@
+ codex/fix-api-call-failed-error-403-07en44
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -845,4 +846,186 @@
 </script>
 </body>
 </html>
+</script>
+</body>
+</html>
+main
 
+
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/index.html b/index.html
+index 51bcdf0918869ffb4f101a5e8e6eb2f87ac1978d..ba6413e524495a08997b5291cc3345e81e36c442 100644
+--- a/index.html
++++ b/index.html
+@@ -365,94 +365,135 @@
+                 pointBackgroundColor: '#06D6A0',
+                 pointRadius: 5
+             }]
+         },
+         options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                 legend: { display: false },
+                 tooltip: { callbacks: { title: tooltipTitleCallback } }
+              },
+              scales: {
+                 x: { grid: { display: false } },
+                 y: {
+                     beginAtZero: false,
+                     max: 14,
+                     min: 6,
+                     ticks: {
+                         stepSize: 1
+                     }
+                 }
+              }
+         }
+     });
+ 
+-    const apiKey = "";
+-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
++    const apiKey = "";
++    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+ 
+     const itineraryData = {
+         '1': 'Arrival in Dubai. Transfer to hotel.',
+         '2': 'Full-Day Abu Dhabi City Tour including Sheikh Zayed Grand Mosque, scenic Corniche drive, Saadiyat Island, and House of the Artisans.',
+         '4': 'Morning guided tour of Sharjah, the UAE\'s cultural capital, followed by an afternoon and evening Desert Safari experience with dune bashing.',
+         '5': 'Old Dubai City Tour including Al Fahidi Historical District, vibrant souks, and the Dubai Museum.',
+         '6': 'Modern Dubai Tour visiting the Museum of the Future, Palm Jumeirah, and Dubai Marina.',
+         '7': 'An excursion to Al Qudra Lakes & Heritage Village for independent exploration.',
+         '8': 'A unique "Hidden Dubai" tour including monorail tickets before a direct airport transfer.'
+     };
+ 
+-    async function callGemini(prompt, retries = 3, delay = 1000) {
+-        try {
+-            const payload = {
+-                contents: [{ parts: [{ text: prompt }] }],
+-            };
+-            const response = await fetch(apiUrl, {
+-                method: 'POST',
+-                headers: { 'Content-Type': 'application/json' },
+-                body: JSON.stringify(payload)
+-            });
+-
+-            if (!response.ok) {
+-                 if (response.status === 429 && retries > 0) {
+-                    await new Promise(res => setTimeout(res, delay));
+-                    return callGemini(prompt, retries - 1, delay * 2);
+-                }
+-                throw new Error(`API call failed with status: ${response.status}`);
++    const buildAuthErrorMessage = (detail = '') => {
++        const baseMessage = "The AI service rejected the request. Please verify that your Google Gemini API key is valid, enabled for the Generative Language API, and allowed to call this model.";
++        if (!detail) return baseMessage;
++        const trimmedDetail = detail.trim();
++        return trimmedDetail ? `${baseMessage} Details from Google: ${trimmedDetail}` : baseMessage;
++    };
++
++    async function callGemini(prompt, retries = 3, delay = 1000) {
++        if (!apiKey || !apiKey.trim()) {
++            return "AI-powered suggestions are currently unavailable because no Google Gemini API key has been configured. Please add your API key to enable this feature.";
++        }
++        try {
++            const payload = {
++                contents: [{ parts: [{ text: prompt }] }],
++            };
++            const response = await fetch(apiUrl, {
++                method: 'POST',
++                headers: { 'Content-Type': 'application/json' },
++                body: JSON.stringify(payload)
++            });
++            const rawBody = await response.text();
++            let parsedBody = null;
++            if (rawBody) {
++                try {
++                    parsedBody = JSON.parse(rawBody);
++                } catch (parseError) {
++                    console.warn('Unable to parse Gemini error payload as JSON:', parseError);
++                }
++            }
++
++            if (!response.ok) {
++                if (response.status === 429 && retries > 0) {
++                    await new Promise(res => setTimeout(res, delay));
++                    return callGemini(prompt, retries - 1, delay * 2);
++                }
++                const apiMessage = parsedBody?.error?.message?.trim();
++                if ([401, 403].includes(Number(response.status))) {
++                    return buildAuthErrorMessage(apiMessage);
++                }
++                const genericDetail = apiMessage ? ` The service responded with: ${apiMessage}` : '';
++                return `The AI service returned an unexpected ${response.status} response.${genericDetail}`;
++            }
++
++            if (!parsedBody) {
++                return "Sorry, I couldn't read the AI response because it was returned in an unexpected format. Please try again in a moment.";
++            }
++
++            const result = parsedBody;
++            const candidate = result.candidates?.[0];
++            if (candidate && candidate.content?.parts?.[0]?.text) {
++                return candidate.content.parts[0].text;
++            } else {
++                return "Sorry, I couldn't generate a response. The model's reply was empty.";
+             }
+-
+-            const result = await response.json();
+-            const candidate = result.candidates?.[0];
+-            if (candidate && candidate.content?.parts?.[0]?.text) {
+-                return candidate.content.parts[0].text;
+-            } else {
+-                return "Sorry, I couldn't generate a response. The model's reply was empty.";
+-            }
+-        } catch (error) {
+-            console.error(error);
+-            return `An error occurred while fetching suggestions: ${error.message}. Please try again later.`;
+-        }
+-    }
++        } catch (error) {
++            console.error(error);
++            const errorMessage = typeof error?.message === 'string' ? error.message : '';
++            if (typeof error?.status !== 'undefined' && [401, 403].includes(Number(error.status))) {
++                return buildAuthErrorMessage();
++            }
++            if (errorMessage) {
++                const normalizedMessage = errorMessage.toLowerCase();
++                if (normalizedMessage.includes('status: 401') || normalizedMessage.includes('status: 403')) {
++                    return buildAuthErrorMessage();
++                }
++            }
++            if (errorMessage && errorMessage.toLowerCase().includes('failed to fetch')) {
++                return "I couldn't reach the AI service. Please check your internet connection and try again in a moment.";
++            }
++            return "An unexpected error occurred while contacting the AI service. Please try again later.";
++        }
++    }
+ 
+     const leisureInput = document.getElementById('leisure-input');
+     const getSuggestionsBtn = document.getElementById('get-suggestions-btn');
+     const geminiLoaderLeisure = document.getElementById('gemini-loader-leisure');
+     const geminiResponseLeisure = document.getElementById('gemini-response-leisure');
+     
+     getSuggestionsBtn.addEventListener('click', async () => {
+         const query = leisureInput.value.trim();
+         if (!query) {
+             geminiResponseLeisure.innerHTML = "Please enter what you're looking for.";
+             geminiResponseLeisure.classList.remove('hidden');
+             return;
+         }
+ 
+         geminiLoaderLeisure.style.display = 'flex';
+         geminiResponseLeisure.classList.add('hidden');
+         getSuggestionsBtn.disabled = true;
+ 
+         const prompt = `You are a luxury travel concierge in Dubai. A group of 13 guests is looking for suggestions for their free day. They are interested in "${query}". Provide 3-4 detailed and high-end suggestions suitable for a large group. Include brief descriptions, why it's a good fit, and perhaps a price indication (e.g., $, $$, $$$). Format the response using markdown.`;
+         
+         const responseText = await callGemini(prompt);
+         geminiResponseLeisure.innerHTML = marked.parse(responseText);
+ 
+         geminiLoaderLeisure.style.display = 'none';
+         geminiResponseLeisure.classList.remove('hidden');
+ 
+EOF
+)
+main
