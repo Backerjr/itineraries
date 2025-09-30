@@ -400,7 +400,68 @@
         '8': 'A unique "Hidden Dubai" tour including monorail tickets before a direct airport transfer.'
     };
 
+    const buildAuthErrorMessage = (detail = '') => {
+        const baseMessage = "The AI service rejected the request. Please verify that your Google Gemini API key is valid, enabled for the Generative Language API, and allowed to call this model.";
+        if (!detail) return baseMessage;
+        const trimmedDetail = detail.trim();
+        return trimmedDetail ? `${baseMessage} Details from Google: ${trimmedDetail}` : baseMessage;
+    };
+
+    const extractErrorDetail = (rawBody, parsedBody, contentType = '') => {
+        const apiMessage = parsedBody?.error?.message;
+        if (typeof apiMessage === 'string' && apiMessage.trim()) {
+            return apiMessage.trim();
+        }
+
+        if (typeof rawBody !== 'string') {
+            return '';
+        }
+
+        const trimmedBody = rawBody.trim();
+        if (!trimmedBody) {
+            return '';
+        }
+
+        if (contentType.includes('text/html') || /^</.test(trimmedBody)) {
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(trimmedBody, 'text/html');
+                const text = doc.body?.textContent?.replace(/\s+/g, ' ').trim();
+                if (text) {
+                    return text;
+                }
+            } catch (parseErr) {
+                console.warn('Unable to parse Gemini HTML error payload:', parseErr);
+            }
+        }
+
+        return trimmedBody.length > 200 ? `${trimmedBody.slice(0, 197)}...` : trimmedBody;
+    };
+
+    const renderGeminiResponse = (element, text) => {
+        if (!element) return;
+
+        const safeText = typeof text === 'string' ? text : '';
+        const trimmed = safeText.trim();
+
+        if (!trimmed) {
+            element.textContent = 'The AI response was empty.';
+            return;
+        }
+
+        const looksLikeHtml = /^<!?doctype\s+html/i.test(trimmed) || /^<\w+(\s|>)/i.test(trimmed);
+        if (looksLikeHtml) {
+            element.textContent = trimmed;
+            return;
+        }
+
+        element.innerHTML = marked.parse(trimmed);
+    };
+
     async function callGemini(prompt, retries = 3, delay = 1000) {
+        if (!apiKey || !apiKey.trim()) {
+            return "AI-powered suggestions are currently unavailable because no Google Gemini API key has been configured. Please add your API key to enable this feature.";
+        }
         try {
             const payload = {
                 contents: [{ parts: [{ text: prompt }] }],
@@ -410,16 +471,35 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+            const rawBody = await response.text();
+            let parsedBody = null;
+            if (rawBody) {
+                try {
+                    parsedBody = JSON.parse(rawBody);
+                } catch (parseError) {
+                    console.warn('Unable to parse Gemini error payload as JSON:', parseError);
+                }
+            }
 
             if (!response.ok) {
-                 if (response.status === 429 && retries > 0) {
+                if (response.status === 429 && retries > 0) {
                     await new Promise(res => setTimeout(res, delay));
                     return callGemini(prompt, retries - 1, delay * 2);
                 }
-                throw new Error(`API call failed with status: ${response.status}`);
+                const contentType = response.headers.get('content-type') || '';
+                const apiMessage = extractErrorDetail(rawBody, parsedBody, contentType);
+                if ([401, 403].includes(Number(response.status))) {
+                    return buildAuthErrorMessage(apiMessage);
+                }
+                const genericDetail = apiMessage ? ` Details from Google: ${apiMessage}` : '';
+                return `The AI service returned an unexpected ${response.status} response.${genericDetail}`;
             }
 
-            const result = await response.json();
+            if (!parsedBody) {
+                return "Sorry, I couldn't read the AI response because it was returned in an unexpected format. Please try again in a moment.";
+            }
+
+            const result = parsedBody;
             const candidate = result.candidates?.[0];
             if (candidate && candidate.content?.parts?.[0]?.text) {
                 return candidate.content.parts[0].text;
@@ -428,7 +508,20 @@
             }
         } catch (error) {
             console.error(error);
-            return `An error occurred while fetching suggestions: ${error.message}. Please try again later.`;
+            const errorMessage = typeof error?.message === 'string' ? error.message : '';
+            if (typeof error?.status !== 'undefined' && [401, 403].includes(Number(error.status))) {
+                return buildAuthErrorMessage();
+            }
+            if (errorMessage) {
+                const normalizedMessage = errorMessage.toLowerCase();
+                if (normalizedMessage.includes('status: 401') || normalizedMessage.includes('status: 403')) {
+                    return buildAuthErrorMessage();
+                }
+            }
+            if (errorMessage && errorMessage.toLowerCase().includes('failed to fetch')) {
+                return "I couldn't reach the AI service. Please check your internet connection and try again in a moment.";
+            }
+            return "An unexpected error occurred while contacting the AI service. Please try again later.";
         }
     }
 
@@ -452,7 +545,7 @@
         const prompt = `You are a luxury travel concierge in Dubai. A group of 13 guests is looking for suggestions for their free day. They are interested in "${query}". Provide 3-4 detailed and high-end suggestions suitable for a large group. Include brief descriptions, why it's a good fit, and perhaps a price indication (e.g., $, $$, $$$). Format the response using markdown.`;
         
         const responseText = await callGemini(prompt);
-        geminiResponseLeisure.innerHTML = marked.parse(responseText);
+        renderGeminiResponse(geminiResponseLeisure, responseText);
 
         geminiLoaderLeisure.style.display = 'none';
         geminiResponseLeisure.classList.remove('hidden');
@@ -475,7 +568,7 @@
         const prompt = `You are a Dubai travel and style expert. For Day ${day} of a trip in mid-November, suggest an appropriate and stylish outfit for a group of tourists. The day's activities are: "${activities}". Provide suggestions for both men and women, considering the weather (warm days, cooler evenings) and any cultural dress codes (especially for religious sites). Format the response using markdown with clear headings.`;
         
         const responseText = await callGemini(prompt);
-        geminiResponseWardrobe.innerHTML = marked.parse(responseText);
+        renderGeminiResponse(geminiResponseWardrobe, responseText);
 
         geminiLoaderWardrobe.style.display = 'none';
         geminiResponseWardrobe.classList.remove('hidden');
@@ -497,7 +590,7 @@
         const prompt = `You are a professional travel photographer. Provide 3-4 creative and practical photography tips for capturing stunning photos at "${location}" in the UAE. Include tips on composition, lighting (best time of day), and unique angles or subjects to focus on. Keep the advice concise and easy for amateur photographers to follow. Format the response using markdown.`;
         
         const responseText = await callGemini(prompt);
-        geminiResponsePhoto.innerHTML = marked.parse(responseText);
+        renderGeminiResponse(geminiResponsePhoto, responseText);
 
         geminiLoaderPhoto.style.display = 'none';
         geminiResponsePhoto.classList.remove('hidden');
@@ -521,7 +614,7 @@
             const prompt = `You are a tour guide for a premium travel group in the UAE. Provide 3 fascinating and concise cultural or historical facts about "${topic}". The facts should be easy to understand for tourists. Format the response as a markdown bulleted list.`;
             
             const responseText = await callGemini(prompt);
-            modalContent.innerHTML = marked.parse(responseText);
+            renderGeminiResponse(modalContent, responseText);
             modalLoader.style.display = 'none';
         });
     });
