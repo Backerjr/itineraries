@@ -432,10 +432,16 @@
 
     let apiKey = getStoredApiKey();
     let apiUrl = apiKey ? buildApiUrl(apiKey) : '';
+    const apiKeyUiState = {
+        status: apiKey ? 'configured' : 'missing',
+        detail: ''
+    };
 
     const setApiKey = (newKey) => {
         apiKey = newKey;
         apiUrl = apiKey ? buildApiUrl(apiKey) : '';
+        apiKeyUiState.status = apiKey ? 'configured' : 'missing';
+        apiKeyUiState.detail = '';
         try {
             if (apiKey) {
                 localStorage.setItem('geminiApiKey', apiKey);
@@ -458,18 +464,33 @@
         }
 
         alert.classList.remove('hidden');
+        alert.classList.remove('bg-yellow-50', 'border-[#FFD166]', 'bg-green-50', 'border-[#06D6A0]', 'bg-red-50', 'border-[#FF6B6B]');
 
-        if (!apiKey) {
-            alert.classList.remove('bg-green-50', 'border-[#06D6A0]');
+        if (apiKeyUiState.status === 'missing') {
             alert.classList.add('bg-yellow-50', 'border-[#FFD166]');
             status.textContent = 'AI-powered suggestions are currently unavailable because no Google Gemini API key has been configured. Please add your API key to enable this feature.';
             removeBtn.classList.add('hidden');
-        } else {
-            alert.classList.remove('bg-yellow-50', 'border-[#FFD166]');
-            alert.classList.add('bg-green-50', 'border-[#06D6A0]');
-            status.textContent = 'A Google Gemini API key is stored locally in this browser. You can update or remove it at any time.';
-            removeBtn.classList.remove('hidden');
+            return;
         }
+
+        if (apiKeyUiState.status === 'unauthorized') {
+            alert.classList.add('bg-red-50', 'border-[#FF6B6B]');
+            const detailText = apiKeyUiState.detail ? ` Details from Google: ${apiKeyUiState.detail}` : '';
+            status.textContent = `We couldn't authenticate with Google using the stored Gemini API key. Please verify the key is correct, enabled for the Generative Language API, and allowed to call this model.${detailText}`;
+            removeBtn.classList.remove('hidden');
+            return;
+        }
+
+        alert.classList.add('bg-green-50', 'border-[#06D6A0]');
+        status.textContent = 'A Google Gemini API key is stored locally in this browser. You can update or remove it at any time.';
+        removeBtn.classList.remove('hidden');
+    };
+
+    const markApiKeyUnauthorized = (detail = '') => {
+        const sanitizedDetail = typeof detail === 'string' ? detail.trim() : '';
+        apiKeyUiState.status = 'unauthorized';
+        apiKeyUiState.detail = sanitizedDetail;
+        updateApiKeyUi();
     };
 
     const itineraryData = {
@@ -571,6 +592,7 @@
                 const contentType = response.headers.get('content-type') || '';
                 const apiMessage = extractErrorDetail(rawBody, parsedBody, contentType);
                 if ([401, 403].includes(Number(response.status))) {
+                    markApiKeyUnauthorized(apiMessage);
                     return buildAuthErrorMessage(apiMessage);
                 }
                 const genericDetail = apiMessage ? ` Details from Google: ${apiMessage}` : '';
@@ -592,11 +614,13 @@
             console.error(error);
             const errorMessage = typeof error?.message === 'string' ? error.message : '';
             if (typeof error?.status !== 'undefined' && [401, 403].includes(Number(error.status))) {
+                markApiKeyUnauthorized();
                 return buildAuthErrorMessage();
             }
             if (errorMessage) {
                 const normalizedMessage = errorMessage.toLowerCase();
                 if (normalizedMessage.includes('status: 401') || normalizedMessage.includes('status: 403')) {
+                    markApiKeyUnauthorized();
                     return buildAuthErrorMessage();
                 }
             }
