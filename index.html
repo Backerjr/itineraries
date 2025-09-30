@@ -510,10 +510,24 @@
         return trimmedDetail ? `${baseMessage} Details from Google: ${trimmedDetail}` : baseMessage;
     };
 
+    const summarizeDetail = (text, maxLength = 200) => {
+        if (typeof text !== 'string') {
+            return '';
+        }
+        const normalized = text.replace(/\s+/g, ' ').trim();
+        if (!normalized) {
+            return '';
+        }
+        if (normalized.length <= maxLength) {
+            return normalized;
+        }
+        return `${normalized.slice(0, maxLength - 1).trim()}…`;
+    };
+
     const extractErrorDetail = (rawBody, parsedBody, contentType = '') => {
         const apiMessage = parsedBody?.error?.message;
         if (typeof apiMessage === 'string' && apiMessage.trim()) {
-            return apiMessage.trim();
+            return summarizeDetail(apiMessage);
         }
 
         if (typeof rawBody !== 'string') {
@@ -529,16 +543,17 @@
             try {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(trimmedBody, 'text/html');
-                const text = doc.body?.textContent?.replace(/\s+/g, ' ').trim();
-                if (text) {
-                    return text;
+                const text = doc.body?.textContent;
+                const summarized = summarizeDetail(text || '');
+                if (summarized) {
+                    return summarized;
                 }
             } catch (parseErr) {
                 console.warn('Unable to parse Gemini HTML error payload:', parseErr);
             }
         }
 
-        return trimmedBody.length > 200 ? `${trimmedBody.slice(0, 197)}...` : trimmedBody;
+        return summarizeDetail(trimmedBody);
     };
 
     const renderGeminiResponse = (element, text) => {
