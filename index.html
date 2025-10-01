@@ -55,6 +55,7 @@
 
     <div class="container mx-auto p-4 md:p-8">
 
+ codex/fix-api-call-failed-error-403
         <header class="text-center mb-12">
             <h1 class="text-4xl md:text-5xl font-extrabold text-[#073B4C]">An 8-Day Premium UAE Journey</h1>
             <p class="text-lg text-[#118AB2] mt-2">Visual Itinerary & Cost Analysis for Mr. Poon & Group</p>
@@ -77,6 +78,30 @@
                 <p class="text-5xl font-bold text-[#FF6B6B]">13</p>
                 <p class="text-lg mt-2">Guests</p>
             </div>
+
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-[#073B4C]">An 8-Day Premium UAE Journey</h1>
+            <p class="text-lg text-[#118AB2] mt-2">Visual Itinerary & Cost Analysis for Mr. Poon & Group</p>
+        </header>
+
+        <div id="api-key-alert" class="hidden bg-yellow-50 border-l-4 border-[#FFD166] p-4 rounded-lg mb-12 md:flex md:items-center md:justify-between gap-4">
+            <div>
+                <h2 class="text-lg font-semibold text-[#073B4C]">Configure Google Gemini API Access</h2>
+                <p id="api-key-status" class="text-sm text-gray-700 mt-1"></p>
+                <p class="text-xs text-gray-500 mt-2">Your API key is stored in this browser only and never sent to our servers.</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2 mt-4 md:mt-0">
+                <button id="configure-api-key-btn" class="bg-[#118AB2] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[#073B4C] transition-colors">Add or Update Key</button>
+                <button id="remove-api-key-btn" class="hidden border border-[#FF6B6B] text-[#FF6B6B] font-semibold py-2 px-4 rounded-lg hover:bg-[#FF6B6B] hover:text-white transition-colors">Remove Key</button>
+            </div>
+        </div>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 text-center">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <p class="text-5xl font-bold text-[#FF6B6B]">13</p>
+                <p class="text-lg mt-2">Guests</p>
+            </div>
+ main
             <div class="bg-white rounded-lg shadow-md p-6">
                 <p class="text-5xl font-bold text-[#FFD166]">8</p>
                 <p class="text-lg mt-2">Days of Discovery</p>
@@ -229,6 +254,7 @@
                     <div class="loader"></div>
                 </div>
             </div>
+ codex/fix-api-call-failed-error-403
         </div>
     </div>
 
@@ -255,6 +281,34 @@
 
 
 <script>
+
+        </div>
+    </div>
+
+    <div id="api-key-modal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-xl font-bold">Google Gemini API Key</h3>
+                <button id="api-key-modal-close" class="text-2xl font-bold">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label for="api-key-input" class="block text-sm font-medium text-gray-700">API Key</label>
+                    <input id="api-key-input" type="password" autocomplete="off" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#118AB2] focus:outline-none" placeholder="AIza...">
+                    <p id="api-key-input-error" class="hidden text-sm text-red-600 mt-2">Please enter a valid API key before saving.</p>
+                </div>
+                <p class="text-sm text-gray-600">The key is saved to your browser's local storage and used only to call Google's Gemini API directly from this page.</p>
+            </div>
+            <div class="flex justify-end gap-2 px-6 py-4 border-t">
+                <button id="cancel-api-key-btn" class="border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition-colors">Cancel</button>
+                <button id="save-api-key-btn" class="bg-[#118AB2] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[#073B4C] transition-colors">Save Key</button>
+            </div>
+        </div>
+    </div>
+
+
+<script>
+ main
     const wrapLabel = (label, maxWidth = 16) => {
         if (label.length <= maxWidth) return label;
         const words = label.split(' ');
@@ -421,6 +475,7 @@
         }
     });
 
+<<<<<< codex/fix-api-call-failed-error-403
     const buildApiUrl = (key) => `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${encodeURIComponent(key)}`;
     const getStoredApiKey = () => {
         try {
@@ -496,6 +551,83 @@
 
     const itineraryData = {
         '1': 'Arrival in Dubai. Transfer to hotel.',
+
+    const buildApiUrl = (key) => `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${encodeURIComponent(key)}`;
+    const getStoredApiKey = () => {
+        try {
+            return localStorage.getItem('geminiApiKey') || '';
+        } catch (storageError) {
+            console.warn('Unable to access localStorage:', storageError);
+            return '';
+        }
+    };
+
+    let apiKey = getStoredApiKey();
+    let apiUrl = apiKey ? buildApiUrl(apiKey) : '';
+    const apiKeyUiState = {
+        status: apiKey ? 'configured' : 'missing',
+        detail: ''
+    };
+
+    const setApiKey = (newKey) => {
+        apiKey = newKey;
+        apiUrl = apiKey ? buildApiUrl(apiKey) : '';
+        apiKeyUiState.status = apiKey ? 'configured' : 'missing';
+        apiKeyUiState.detail = '';
+        try {
+            if (apiKey) {
+                localStorage.setItem('geminiApiKey', apiKey);
+            } else {
+                localStorage.removeItem('geminiApiKey');
+            }
+        } catch (storageError) {
+            console.warn('Unable to persist Gemini API key:', storageError);
+        }
+        updateApiKeyUi();
+    };
+
+    const updateApiKeyUi = () => {
+        const alert = document.getElementById('api-key-alert');
+        const status = document.getElementById('api-key-status');
+        const removeBtn = document.getElementById('remove-api-key-btn');
+
+        if (!alert || !status || !removeBtn) {
+            return;
+        }
+
+        alert.classList.remove('hidden');
+        alert.classList.remove('bg-yellow-50', 'border-[#FFD166]', 'bg-green-50', 'border-[#06D6A0]', 'bg-red-50', 'border-[#FF6B6B]');
+
+        if (apiKeyUiState.status === 'missing') {
+            alert.classList.add('bg-yellow-50', 'border-[#FFD166]');
+            status.textContent = 'AI-powered suggestions are currently unavailable because no Google Gemini API key has been configured. Please add your API key to enable this feature.';
+            removeBtn.classList.add('hidden');
+            return;
+        }
+
+        if (apiKeyUiState.status === 'unauthorized') {
+            alert.classList.add('bg-red-50', 'border-[#FF6B6B]');
+            const detailText = apiKeyUiState.detail ? ` Details from Google: ${apiKeyUiState.detail}` : '';
+            status.textContent = `We couldn't authenticate with Google using the stored Gemini API key. Please verify the key is correct, enabled for the Generative Language API, and allowed to call this model.${detailText}`;
+            removeBtn.classList.remove('hidden');
+            return;
+        }
+
+        alert.classList.add('bg-green-50', 'border-[#06D6A0]');
+        status.textContent = 'A Google Gemini API key is stored locally in this browser. You can update or remove it at any time.';
+        removeBtn.classList.remove('hidden');
+    };
+
+    const markApiKeyUnauthorized = (detail = '') => {
+        const sanitizedDetail = typeof detail === 'string' ? detail.trim() : '';
+        apiKeyUiState.status = 'unauthorized';
+        apiKeyUiState.detail = sanitizedDetail;
+        updateApiKeyUi();
+    };
+
+    const itineraryData = {
+        '1': 'Arrival in Dubai. Transfer to hotel.',
+ main
         '2': 'Full-Day Abu Dhabi City Tour including Sheikh Zayed Grand Mosque, scenic Corniche drive, Saadiyat Island, and House of the Artisans.',
         '4': 'Morning guided tour of Sharjah, the UAE\'s cultural capital, followed by an afternoon and evening Desert Safari experience with dune bashing.',
         '5': 'Old Dubai City Tour including Al Fahidi Historical District, vibrant souks, and the Dubai Museum.',
@@ -504,6 +636,7 @@
         '8': 'A unique "Hidden Dubai" tour including monorail tickets before a direct airport transfer.'
     };
 
+ codex/fix-api-call-failed-error-403
     const buildAuthErrorMessage = (detail = '') => {
         const baseMessage = "The AI service rejected the request. Please verify that your Google Gemini API key is valid, enabled for the Generative Language API, and allowed to call this model.";
         if (!detail) return baseMessage;
@@ -647,6 +780,150 @@
         }
     }
 
+    const buildAuthErrorMessage = (detail = '') => {
+        const baseMessage = "The AI service rejected the request. Please verify that your Google Gemini API key is valid, enabled for the Generative Language API, and allowed to call this model.";
+        if (!detail) return baseMessage;
+        const trimmedDetail = detail.trim();
+        return trimmedDetail ? `${baseMessage} Details from Google: ${trimmedDetail}` : baseMessage;
+    };
+
+    const summarizeDetail = (text, maxLength = 200) => {
+        if (typeof text !== 'string') {
+            return '';
+        }
+        const normalized = text.replace(/\s+/g, ' ').trim();
+        if (!normalized) {
+            return '';
+        }
+        if (normalized.length <= maxLength) {
+            return normalized;
+        }
+        return `${normalized.slice(0, maxLength - 1).trim()}…`;
+    };
+
+    const extractErrorDetail = (rawBody, parsedBody, contentType = '') => {
+        const apiMessage = parsedBody?.error?.message;
+        if (typeof apiMessage === 'string' && apiMessage.trim()) {
+            return summarizeDetail(apiMessage);
+        }
+
+        if (typeof rawBody !== 'string') {
+            return '';
+        }
+
+        const trimmedBody = rawBody.trim();
+        if (!trimmedBody) {
+            return '';
+        }
+
+        if (contentType.includes('text/html') || /^</.test(trimmedBody)) {
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(trimmedBody, 'text/html');
+                const text = doc.body?.textContent;
+                const summarized = summarizeDetail(text || '');
+                if (summarized) {
+                    return summarized;
+                }
+            } catch (parseErr) {
+                console.warn('Unable to parse Gemini HTML error payload:', parseErr);
+            }
+        }
+
+        return summarizeDetail(trimmedBody);
+    };
+
+    const renderGeminiResponse = (element, text) => {
+        if (!element) return;
+
+        const safeText = typeof text === 'string' ? text : '';
+        const trimmed = safeText.trim();
+
+        if (!trimmed) {
+            element.textContent = 'The AI response was empty.';
+            return;
+        }
+
+        const looksLikeHtml = /^<!?doctype\s+html/i.test(trimmed) || /^<\w+(\s|>)/i.test(trimmed);
+        if (looksLikeHtml) {
+            element.textContent = trimmed;
+            return;
+        }
+
+        element.innerHTML = marked.parse(trimmed);
+    };
+
+    async function callGemini(prompt, retries = 3, delay = 1000) {
+        if (!apiKey || !apiKey.trim()) {
+            return "AI-powered suggestions are currently unavailable because no Google Gemini API key has been configured. Please add your API key to enable this feature.";
+        }
+        try {
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+            };
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const rawBody = await response.text();
+            let parsedBody = null;
+            if (rawBody) {
+                try {
+                    parsedBody = JSON.parse(rawBody);
+                } catch (parseError) {
+                    console.warn('Unable to parse Gemini error payload as JSON:', parseError);
+                }
+            }
+
+            if (!response.ok) {
+                if (response.status === 429 && retries > 0) {
+                    await new Promise(res => setTimeout(res, delay));
+                    return callGemini(prompt, retries - 1, delay * 2);
+                }
+                const contentType = response.headers.get('content-type') || '';
+                const apiMessage = extractErrorDetail(rawBody, parsedBody, contentType);
+                if ([401, 403].includes(Number(response.status))) {
+                    markApiKeyUnauthorized(apiMessage);
+                    return buildAuthErrorMessage(apiMessage);
+                }
+                const genericDetail = apiMessage ? ` Details from Google: ${apiMessage}` : '';
+                return `The AI service returned an unexpected ${response.status} response.${genericDetail}`;
+            }
+
+            if (!parsedBody) {
+                return "Sorry, I couldn't read the AI response because it was returned in an unexpected format. Please try again in a moment.";
+            }
+
+            const result = parsedBody;
+            const candidate = result.candidates?.[0];
+            if (candidate && candidate.content?.parts?.[0]?.text) {
+                return candidate.content.parts[0].text;
+            } else {
+                return "Sorry, I couldn't generate a response. The model's reply was empty.";
+            }
+        } catch (error) {
+            console.error(error);
+            const errorMessage = typeof error?.message === 'string' ? error.message : '';
+            if (typeof error?.status !== 'undefined' && [401, 403].includes(Number(error.status))) {
+                markApiKeyUnauthorized();
+                return buildAuthErrorMessage();
+            }
+            if (errorMessage) {
+                const normalizedMessage = errorMessage.toLowerCase();
+                if (normalizedMessage.includes('status: 401') || normalizedMessage.includes('status: 403')) {
+                    markApiKeyUnauthorized();
+                    return buildAuthErrorMessage();
+                }
+            }
+            if (errorMessage && errorMessage.toLowerCase().includes('failed to fetch')) {
+                return "I couldn't reach the AI service. Please check your internet connection and try again in a moment.";
+            }
+            return "An unexpected error occurred while contacting the AI service. Please try again later.";
+        }
+    }
+ main
+
     const leisureInput = document.getElementById('leisure-input');
     const getSuggestionsBtn = document.getElementById('get-suggestions-btn');
     const geminiLoaderLeisure = document.getElementById('gemini-loader-leisure');
@@ -666,8 +943,13 @@
 
         const prompt = `You are a luxury travel concierge in Dubai. A group of 13 guests is looking for suggestions for their free day. They are interested in "${query}". Provide 3-4 detailed and high-end suggestions suitable for a large group. Include brief descriptions, why it's a good fit, and perhaps a price indication (e.g., $, $$, $$$). Format the response using markdown.`;
         
+ codex/fix-api-call-failed-error-403
         const responseText = await callGemini(prompt);
         renderGeminiResponse(geminiResponseLeisure, responseText);
+
+        const responseText = await callGemini(prompt);
+        renderGeminiResponse(geminiResponseLeisure, responseText);
+ main
 
         geminiLoaderLeisure.style.display = 'none';
         geminiResponseLeisure.classList.remove('hidden');
@@ -689,8 +971,13 @@
 
         const prompt = `You are a Dubai travel and style expert. For Day ${day} of a trip in mid-November, suggest an appropriate and stylish outfit for a group of tourists. The day's activities are: "${activities}". Provide suggestions for both men and women, considering the weather (warm days, cooler evenings) and any cultural dress codes (especially for religious sites). Format the response using markdown with clear headings.`;
         
+ codex/fix-api-call-failed-error-403
         const responseText = await callGemini(prompt);
         renderGeminiResponse(geminiResponseWardrobe, responseText);
+
+        const responseText = await callGemini(prompt);
+        renderGeminiResponse(geminiResponseWardrobe, responseText);
+ main
 
         geminiLoaderWardrobe.style.display = 'none';
         geminiResponseWardrobe.classList.remove('hidden');
@@ -711,13 +998,59 @@
 
         const prompt = `You are a professional travel photographer. Provide 3-4 creative and practical photography tips for capturing stunning photos at "${location}" in the UAE. Include tips on composition, lighting (best time of day), and unique angles or subjects to focus on. Keep the advice concise and easy for amateur photographers to follow. Format the response using markdown.`;
         
+ codex/fix-api-call-failed-error-403
         const responseText = await callGemini(prompt);
         renderGeminiResponse(geminiResponsePhoto, responseText);
+
+        const responseText = await callGemini(prompt);
+        renderGeminiResponse(geminiResponsePhoto, responseText);
+ main
 
         geminiLoaderPhoto.style.display = 'none';
         geminiResponsePhoto.classList.remove('hidden');
         getPhotoBtn.disabled = false;
     });
+
+ codex/fix-api-call-failed-error-403
+    const insightModal = document.getElementById('insight-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalContent = document.getElementById('modal-content');
+    const modalClose = document.getElementById('modal-close');
+    const modalLoader = document.getElementById('modal-loader');
+
+    const apiKeyModal = document.getElementById('api-key-modal');
+    const apiKeyModalClose = document.getElementById('api-key-modal-close');
+    const configureApiKeyBtn = document.getElementById('configure-api-key-btn');
+    const cancelApiKeyBtn = document.getElementById('cancel-api-key-btn');
+    const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+    const removeApiKeyBtn = document.getElementById('remove-api-key-btn');
+    const apiKeyInput = document.getElementById('api-key-input');
+    const apiKeyInputError = document.getElementById('api-key-input-error');
+
+    const closeApiKeyModal = () => {
+        if (!apiKeyModal) return;
+        apiKeyModal.style.display = 'none';
+        if (apiKeyInput) {
+            apiKeyInput.value = '';
+        }
+        if (apiKeyInputError) {
+            apiKeyInputError.classList.add('hidden');
+        }
+    };
+
+    const openApiKeyModal = () => {
+        if (!apiKeyModal) return;
+        apiKeyModal.style.display = 'flex';
+        if (apiKeyInput) {
+            apiKeyInput.value = apiKey || '';
+            apiKeyInput.focus();
+        }
+    };
+
+    document.querySelectorAll('.insight-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            const topic = button.dataset.topic;
+            modalTitle.innerText = `Cultural Insights: ${topic}`;
 
     const insightModal = document.getElementById('insight-modal');
     const modalTitle = document.getElementById('modal-title');
@@ -761,12 +1094,78 @@
         button.addEventListener('click', async () => {
             const topic = button.dataset.topic;
             modalTitle.innerText = `Cultural Insights: ${topic}`;
+ main
             insightModal.style.display = 'flex';
             modalContent.innerHTML = '';
             modalLoader.style.display = 'flex';
 
             const prompt = `You are a tour guide for a premium travel group in the UAE. Provide 3 fascinating and concise cultural or historical facts about "${topic}". The facts should be easy to understand for tourists. Format the response as a markdown bulleted list.`;
             
+ codex/fix-api-call-failed-error-403
+            const responseText = await callGemini(prompt);
+            renderGeminiResponse(modalContent, responseText);
+            modalLoader.style.display = 'none';
+        });
+    });
+
+    modalClose.addEventListener('click', () => {
+        insightModal.style.display = 'none';
+    });
+
+    insightModal.addEventListener('click', (e) => {
+        if (e.target === insightModal) {
+            insightModal.style.display = 'none';
+        }
+    });
+
+    if (configureApiKeyBtn) {
+        configureApiKeyBtn.addEventListener('click', openApiKeyModal);
+    }
+
+    if (cancelApiKeyBtn) {
+        cancelApiKeyBtn.addEventListener('click', closeApiKeyModal);
+    }
+
+    if (apiKeyModalClose) {
+        apiKeyModalClose.addEventListener('click', closeApiKeyModal);
+    }
+
+    if (apiKeyModal) {
+        apiKeyModal.addEventListener('click', (event) => {
+            if (event.target === apiKeyModal) {
+                closeApiKeyModal();
+            }
+        });
+    }
+
+    if (saveApiKeyBtn) {
+        saveApiKeyBtn.addEventListener('click', () => {
+            if (!apiKeyInput) return;
+            const nextKey = apiKeyInput.value.trim();
+            if (!nextKey) {
+                if (apiKeyInputError) {
+                    apiKeyInputError.classList.remove('hidden');
+                }
+                return;
+            }
+            setApiKey(nextKey);
+            closeApiKeyModal();
+        });
+    }
+
+    if (removeApiKeyBtn) {
+        removeApiKeyBtn.addEventListener('click', () => {
+            setApiKey('');
+            closeApiKeyModal();
+        });
+    }
+
+    updateApiKeyUi();
+
+</script>
+</body>
+</html>
+
             const responseText = await callGemini(prompt);
             renderGeminiResponse(modalContent, responseText);
             modalLoader.style.display = 'none';
@@ -851,6 +1250,7 @@
 </html>
 main
 
+ main
 
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
 diff --git a/index.html b/index.html
