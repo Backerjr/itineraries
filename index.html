@@ -61,7 +61,11 @@
             <div>
                 <h2 class="text-lg font-semibold text-[#073B4C]">Configure Google Gemini API Access</h2>
                 <p id="api-key-status" class="text-sm text-gray-700 mt-1"></p>
+ codex/fix-code-issues-and-run-tests-kcfbja
+                <p class="text-xs text-gray-500 mt-2">Your API key is stored securely on this server and only used to contact Google's Gemini API for this itinerary.</p>
+
                 <p class="text-xs text-gray-500 mt-2">Your API key is stored in this browser only and never sent to our servers.</p>
+ main
             </div>
             <div class="flex flex-col sm:flex-row gap-2 mt-4 md:mt-0">
                 <button id="configure-api-key-btn" class="bg-[#118AB2] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[#073B4C] transition-colors">Add or Update Key</button>
@@ -240,7 +244,11 @@
                     <input id="api-key-input" type="password" autocomplete="off" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#118AB2] focus:outline-none" placeholder="AIza...">
                     <p id="api-key-input-error" class="hidden text-sm text-red-600 mt-2">Please enter a valid API key before saving.</p>
                 </div>
+ codex/fix-code-issues-and-run-tests-kcfbja
+                <p class="text-sm text-gray-600">The key is saved securely on this server and used only when this page calls Google's Gemini API on your behalf.</p>
+
                 <p class="text-sm text-gray-600">The key is saved to your browser's local storage and used only to call Google's Gemini API directly from this page.</p>
+ main
             </div>
             <div class="flex justify-end gap-2 px-6 py-4 border-t">
                 <button id="cancel-api-key-btn" class="border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition-colors">Cancel</button>
@@ -417,6 +425,18 @@
 
         const buildApiUrl = (key) => `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${encodeURIComponent(key)}`;
 
+ codex/fix-code-issues-and-run-tests-kcfbja
+        let apiKey = '';
+        let apiUrl = '';
+        const apiKeyUiState = {
+            status: 'loading',
+            detail: ''
+        };
+
+        const applyApiKey = (value) => {
+            apiKey = typeof value === 'string' ? value.trim() : '';
+            apiUrl = apiKey ? buildApiUrl(apiKey) : '';
+
         const getStoredApiKey = () => {
             try {
                 return localStorage.getItem('geminiApiKey') || '';
@@ -458,6 +478,7 @@
                 console.warn('Unable to persist Gemini API key:', storageError);
             }
             updateApiKeyUi();
+ main
         };
 
         const updateApiKeyUi = () => {
@@ -465,37 +486,147 @@
             const status = document.getElementById('api-key-status');
             const removeBtn = document.getElementById('remove-api-key-btn');
 
+ codex/fix-code-issues-and-run-tests-kcfbja
+            if (!alert || !status) {
+
             if (!alert || !status || !removeBtn) {
+ main
                 return;
             }
 
             alert.classList.remove('hidden');
             alert.classList.remove('bg-yellow-50', 'border-[#FFD166]', 'bg-green-50', 'border-[#06D6A0]', 'bg-red-50', 'border-[#FF6B6B]');
 
+ codex/fix-code-issues-and-run-tests-kcfbja
+            const detail = apiKeyUiState.detail ? ` ${apiKeyUiState.detail}` : '';
+
+            if (apiKeyUiState.status === 'loading') {
+                alert.classList.add('bg-yellow-50', 'border-[#FFD166]');
+                status.textContent = 'Checking the server for a stored Google Gemini API key...';
+                if (removeBtn) {
+                    removeBtn.classList.add('hidden');
+                }
+                return;
+            }
+
+            if (apiKeyUiState.status === 'error') {
+                alert.classList.add('bg-red-50', 'border-[#FF6B6B]');
+                status.textContent = `We could not reach the server to manage your Google Gemini API key.${detail}`;
+                if (removeBtn) {
+                    removeBtn.classList.add('hidden');
+                }
+                return;
+            }
+
+            if (apiKeyUiState.status === 'missing') {
+                alert.classList.add('bg-yellow-50', 'border-[#FFD166]');
+                status.textContent = 'AI-powered suggestions are currently unavailable because no Google Gemini API key has been configured on the server. Add your API key to enable this feature.';
+                if (removeBtn) {
+                    removeBtn.classList.add('hidden');
+                }
+
             if (apiKeyUiState.status === 'missing') {
                 alert.classList.add('bg-yellow-50', 'border-[#FFD166]');
                 status.textContent = 'AI-powered suggestions are currently unavailable because no Google Gemini API key has been configured. Please add your API key to enable this feature.';
                 removeBtn.classList.add('hidden');
+ main
                 return;
             }
 
             if (apiKeyUiState.status === 'unauthorized') {
                 alert.classList.add('bg-red-50', 'border-[#FF6B6B]');
+ codex/fix-code-issues-and-run-tests-kcfbja
+                status.textContent = `We could not authenticate with Google using the stored Gemini API key. Please verify the key is correct, enabled for the Generative Language API, and allowed to call this model.${detail}`;
+                if (removeBtn) {
+                    removeBtn.classList.remove('hidden');
+                }
+
                 const detailText = apiKeyUiState.detail ? ` Details from Google: ${apiKeyUiState.detail}` : '';
                 status.textContent = `We couldn't authenticate with Google using the stored Gemini API key. Please verify the key is correct, enabled for the Generative Language API, and allowed to call this model.${detailText}`;
                 removeBtn.classList.remove('hidden');
+ main
                 return;
             }
 
             alert.classList.add('bg-green-50', 'border-[#06D6A0]');
+ codex/fix-code-issues-and-run-tests-kcfbja
+            status.textContent = 'A Google Gemini API key is securely stored on this server and automatically applied to AI-powered features on this page.';
+            if (removeBtn) {
+                removeBtn.classList.remove('hidden');
+            }
+        };
+
+        const buildServerErrorMessage = (response, fallbackMessage) => {
+            if (!response) return fallbackMessage;
+            const statusText = response.status ? ` (status: ${response.status})` : '';
+            return `${fallbackMessage}${statusText}`;
+        };
+
+        const fetchStoredApiKey = async () => {
+            const response = await fetch('/api/gemini-key', {
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (response.status === 204 || response.status === 404) {
+                return '';
+            }
+
+            if (!response.ok) {
+                const message = await response.text().catch(() => '');
+                throw new Error(message || buildServerErrorMessage(response, 'The server returned an unexpected response while retrieving the API key.'));
+            }
+
+            const payload = await response.json().catch(() => ({}));
+            const storedKey = typeof payload?.key === 'string' ? payload.key.trim() : '';
+            return storedKey;
+        };
+
+        const persistApiKeyToServer = async (value) => {
+            const response = await fetch('/api/gemini-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: value })
+            });
+
+            if (!response.ok) {
+                const message = await response.text().catch(() => '');
+                throw new Error(message || buildServerErrorMessage(response, 'The server rejected the API key update.'));
+            }
+        };
+
+        const removeApiKeyFromServer = async () => {
+            const response = await fetch('/api/gemini-key', {
+                method: 'DELETE'
+            });
+
+            if (!response.ok && response.status !== 204 && response.status !== 404) {
+                const message = await response.text().catch(() => '');
+                throw new Error(message || buildServerErrorMessage(response, 'The server was unable to remove the stored API key.'));
+            }
+        };
+
+        const itineraryData = {
+            '1': 'Arrival in Dubai. Transfer to hotel.',
+            '2': "Full-Day Abu Dhabi City Tour including Sheikh Zayed Grand Mosque, scenic Corniche drive, Saadiyat Island, and House of the Artisans.",
+            '4': "Morning guided tour of Sharjah, the UAE's cultural capital, followed by an afternoon and evening Desert Safari experience with dune bashing.",
+            '5': 'Old Dubai City Tour including Al Fahidi Historical District, vibrant souks, and the Dubai Museum.',
+            '6': "Modern Dubai Tour visiting the Museum of the Future, Palm Jumeirah, and Dubai Marina.",
+            '7': 'An excursion to Al Qudra Lakes & Heritage Village for independent exploration.',
+            '8': 'A unique "Hidden Dubai" tour including monorail tickets before a direct airport transfer.'
+
             status.textContent = 'A Google Gemini API key is stored locally in this browser. You can update or remove it at any time.';
             removeBtn.classList.remove('hidden');
+ main
         };
 
         const markApiKeyUnauthorized = (detail = '') => {
             const sanitizedDetail = typeof detail === 'string' ? detail.trim() : '';
             apiKeyUiState.status = 'unauthorized';
+ codex/fix-code-issues-and-run-tests-kcfbja
+            apiKeyUiState.detail = sanitizedDetail ? `Details from Google: ${sanitizedDetail}` : '';
+
             apiKeyUiState.detail = sanitizedDetail;
+ main
             updateApiKeyUi();
         };
 
@@ -574,7 +705,19 @@
 
         async function callGemini(prompt, retries = 3, delay = 1000) {
             if (!apiKey || !apiKey.trim()) {
+ codex/fix-code-issues-and-run-tests-kcfbja
+                if (apiKeyUiState.status === 'loading') {
+                    return 'AI-powered suggestions are getting ready. We are still checking the server for the stored Google Gemini API key—please try again in a few seconds.';
+                }
+
+                if (apiKeyUiState.status === 'error') {
+                    return 'AI-powered suggestions are unavailable because the server-side Gemini API key store could not be reached. Please refresh the page or try again later.';
+                }
+
+                return 'AI-powered suggestions are currently unavailable because no Google Gemini API key has been configured on the server. Add your API key to enable this feature.';
+
                 return 'AI-powered suggestions are currently unavailable because no Google Gemini API key has been configured. Please add your API key to enable this feature.';
+ main
             }
             try {
                 const payload = {
@@ -774,6 +917,38 @@
         const removeApiKeyBtn = document.getElementById('remove-api-key-btn');
         const apiKeyInput = document.getElementById('api-key-input');
         const apiKeyInputError = document.getElementById('api-key-input-error');
+ codex/fix-code-issues-and-run-tests-kcfbja
+        const defaultApiKeyInputErrorMessage = apiKeyInputError?.textContent?.trim() || 'Please enter a valid API key before saving.';
+
+        const hideApiKeyInputError = () => {
+            if (!apiKeyInputError) return;
+            apiKeyInputError.textContent = defaultApiKeyInputErrorMessage;
+            apiKeyInputError.classList.add('hidden');
+        };
+
+        const showApiKeyInputError = (message = defaultApiKeyInputErrorMessage) => {
+            if (!apiKeyInputError) return;
+            apiKeyInputError.textContent = message;
+            apiKeyInputError.classList.remove('hidden');
+        };
+
+        const setButtonBusy = (button, busyText) => {
+            if (!button) return () => {};
+            const originalText = button.dataset.originalText || button.textContent;
+            button.dataset.originalText = originalText;
+            button.disabled = true;
+            button.classList.add('opacity-60', 'cursor-not-allowed');
+            if (typeof busyText === 'string' && busyText.trim()) {
+                button.textContent = busyText;
+            }
+            return () => {
+                button.disabled = false;
+                button.textContent = button.dataset.originalText || originalText;
+                button.classList.remove('opacity-60', 'cursor-not-allowed');
+            };
+        };
+
+ main
 
         const closeApiKeyModal = () => {
             if (!apiKeyModal) return;
@@ -781,9 +956,13 @@
             if (apiKeyInput) {
                 apiKeyInput.value = '';
             }
+ codex/fix-code-issues-and-run-tests-kcfbja
+            hideApiKeyInputError();
+
             if (apiKeyInputError) {
                 apiKeyInputError.classList.add('hidden');
             }
+ main
         };
 
         const openApiKeyModal = () => {
@@ -793,6 +972,10 @@
                 apiKeyInput.value = apiKey || '';
                 apiKeyInput.focus();
             }
+ codex/fix-code-issues-and-run-tests-kcfbja
+            hideApiKeyInputError();
+
+ main
         };
 
         if (configureApiKeyBtn) {
@@ -816,6 +999,42 @@
         }
 
         if (saveApiKeyBtn) {
+ codex/fix-code-issues-and-run-tests-kcfbja
+            saveApiKeyBtn.addEventListener('click', async () => {
+                if (!apiKeyInput) return;
+                const nextKey = apiKeyInput.value.trim();
+                if (!nextKey) {
+                    showApiKeyInputError();
+                    return;
+                }
+
+                hideApiKeyInputError();
+                apiKeyUiState.status = 'loading';
+                apiKeyUiState.detail = '';
+                updateApiKeyUi();
+
+                const restoreButton = setButtonBusy(saveApiKeyBtn, 'Saving...');
+
+                try {
+                    await persistApiKeyToServer(nextKey);
+                    applyApiKey(nextKey);
+                    apiKeyUiState.status = 'configured';
+                    apiKeyUiState.detail = '';
+                    updateApiKeyUi();
+                    closeApiKeyModal();
+                } catch (error) {
+                    console.error('Failed to store Gemini API key on the server:', error);
+                    const message = typeof error?.message === 'string' && error.message.trim()
+                        ? error.message.trim()
+                        : 'We could not save the API key on the server. Please try again.';
+                    showApiKeyInputError(message);
+                    apiKeyUiState.status = apiKey ? 'configured' : 'missing';
+                    apiKeyUiState.detail = '';
+                    updateApiKeyUi();
+                } finally {
+                    restoreButton();
+                }
+
             saveApiKeyBtn.addEventListener('click', () => {
                 if (!apiKeyInput) return;
                 const nextKey = apiKeyInput.value.trim();
@@ -827,33 +1046,98 @@
                 }
                 setApiKey(nextKey);
                 closeApiKeyModal();
+ main
             });
         }
 
         if (removeApiKeyBtn) {
+ codex/fix-code-issues-and-run-tests-kcfbja
+            removeApiKeyBtn.addEventListener('click', async () => {
+                const confirmed = window.confirm('Remove the stored Google Gemini API key from the server?');
+                if (!confirmed) {
+                    return;
+                }
+
+                apiKeyUiState.status = 'loading';
+                apiKeyUiState.detail = '';
+                updateApiKeyUi();
+
+                const restoreButton = setButtonBusy(removeApiKeyBtn, 'Removing...');
+
+                try {
+                    await removeApiKeyFromServer();
+                    applyApiKey('');
+                    apiKeyUiState.status = 'missing';
+                    apiKeyUiState.detail = '';
+                } catch (error) {
+                    console.error('Failed to remove Gemini API key from the server:', error);
+                    apiKeyUiState.status = 'error';
+                    apiKeyUiState.detail = typeof error?.message === 'string' && error.message.trim()
+                        ? error.message.trim()
+                        : 'Please try again in a moment.';
+                } finally {
+                    restoreButton();
+                    updateApiKeyUi();
+                }
+
             removeApiKeyBtn.addEventListener('click', () => {
                 setApiKey('');
                 closeApiKeyModal();
+ main
             });
         }
 
         if (apiKeyInput) {
             apiKeyInput.addEventListener('input', () => {
+ codex/fix-code-issues-and-run-tests-kcfbja
+                hideApiKeyInputError();
+
                 if (apiKeyInputError) {
                     apiKeyInputError.classList.add('hidden');
                 }
+ main
             });
             apiKeyInput.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
                     event.preventDefault();
+ codex/fix-code-issues-and-run-tests-kcfbja
+                    if (saveApiKeyBtn && !saveApiKeyBtn.disabled) {
+
                     if (saveApiKeyBtn) {
+ main
                         saveApiKeyBtn.click();
                     }
                 }
             });
         }
 
+ codex/fix-code-issues-and-run-tests-kcfbja
+        const initializeApiKey = async () => {
+            apiKeyUiState.status = 'loading';
+            apiKeyUiState.detail = '';
+            updateApiKeyUi();
+
+            try {
+                const storedKey = await fetchStoredApiKey();
+                applyApiKey(storedKey);
+                apiKeyUiState.status = storedKey ? 'configured' : 'missing';
+                apiKeyUiState.detail = '';
+            } catch (error) {
+                console.error('Failed to retrieve stored Gemini API key from the server:', error);
+                applyApiKey('');
+                apiKeyUiState.status = 'error';
+                apiKeyUiState.detail = typeof error?.message === 'string' && error.message.trim()
+                    ? error.message.trim()
+                    : 'Please try again later.';
+            }
+
+            updateApiKeyUi();
+        };
+
+        initializeApiKey();
+
         updateApiKeyUi();
+ main
     </script>
 </body>
 </html>
