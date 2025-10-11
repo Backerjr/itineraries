@@ -6,6 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, 'data');
 const KEY_FILE = path.join(DATA_DIR, 'gemini-key.json');
+const STATIC_ROOT = path.join(__dirname);
 
 app.use(express.json({ limit: '2kb' }));
 
@@ -89,7 +90,16 @@ app.delete('/api/gemini-key', async (_req, res) => {
   }
 });
 
-app.use(express.static(path.join(__dirname)));
+app.use((req, res, next) => {
+  const requestPath = req.path;
+  if (requestPath === '/data' || requestPath === '/data/' || requestPath.startsWith('/data/')) {
+    return res.status(404).send('Not Found');
+  }
+
+  return next();
+});
+
+app.use(express.static(STATIC_ROOT));
 
 app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
